@@ -159,7 +159,7 @@ export function Configuracoes() {
         <CardContent>
           <h2 className="text-lg font-semibold text-text-primary mb-6">Seu Pacote</h2>
 
-          <div className="bg-gradient-to-r from-primary to-primary-light rounded-xl p-6 text-white">
+          <div className="gradient-primary rounded-xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">

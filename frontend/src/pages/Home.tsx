@@ -267,7 +267,7 @@ export function Home() {
       </div>
 
       {/* Pacote Info */}
-      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+      <Card className="gradient-primary text-white">
         <CardContent>
           <div className="flex items-center justify-between">
             <div>

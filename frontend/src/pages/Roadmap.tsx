@@ -297,7 +297,7 @@ export function RoadmapPage() {
       </div>
 
       {/* Progresso Geral */}
-      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+      <Card className="gradient-primary text-white">
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div>
