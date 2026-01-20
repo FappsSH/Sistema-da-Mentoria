@@ -48,7 +48,9 @@ body {
   min-height: 100vh;
 }
 
-/* Utility Classes for Colors */
+/* ===== COLOR UTILITIES ===== */
+
+/* Background colors */
 .bg-primary { background-color: #1a1a4e !important; }
 .bg-primary-light { background-color: #2d2d7a !important; }
 .bg-primary-dark { background-color: #12123a !important; }
@@ -59,6 +61,7 @@ body {
 .bg-background { background-color: #f8fafc !important; }
 .bg-surface { background-color: #ffffff !important; }
 
+/* Text colors */
 .text-primary { color: #1a1a4e !important; }
 .text-primary-light { color: #2d2d7a !important; }
 .text-secondary { color: #6366f1 !important; }
@@ -68,7 +71,12 @@ body {
 .text-text-primary { color: #1e293b !important; }
 .text-text-secondary { color: #64748b !important; }
 
+/* Border colors */
 .border-primary { border-color: #1a1a4e !important; }
+.border-secondary { border-color: #6366f1 !important; }
+.border-success { border-color: #22c55e !important; }
+.border-warning { border-color: #f59e0b !important; }
+.border-danger { border-color: #ef4444 !important; }
 .border-border { border-color: #e2e8f0 !important; }
 
 /* Background with opacity */
@@ -76,44 +84,82 @@ body {
 .bg-primary\/10 { background-color: rgba(26, 26, 78, 0.1) !important; }
 .bg-secondary\/5 { background-color: rgba(99, 102, 241, 0.05) !important; }
 .bg-secondary\/10 { background-color: rgba(99, 102, 241, 0.1) !important; }
+.bg-success\/5 { background-color: rgba(34, 197, 94, 0.05) !important; }
 .bg-success\/10 { background-color: rgba(34, 197, 94, 0.1) !important; }
+.bg-warning\/5 { background-color: rgba(245, 158, 11, 0.05) !important; }
 .bg-warning\/10 { background-color: rgba(245, 158, 11, 0.1) !important; }
 .bg-danger\/5 { background-color: rgba(239, 68, 68, 0.05) !important; }
 .bg-danger\/10 { background-color: rgba(239, 68, 68, 0.1) !important; }
 .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1) !important; }
 .bg-white\/20 { background-color: rgba(255, 255, 255, 0.2) !important; }
+.bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
 
+/* Border with opacity */
 .border-primary\/10 { border-color: rgba(26, 26, 78, 0.1) !important; }
 .border-primary\/20 { border-color: rgba(26, 26, 78, 0.2) !important; }
 .border-danger\/20 { border-color: rgba(239, 68, 68, 0.2) !important; }
 .border-success\/20 { border-color: rgba(34, 197, 94, 0.2) !important; }
 .border-white\/20 { border-color: rgba(255, 255, 255, 0.2) !important; }
 
+/* Text with opacity */
 .text-text-secondary\/30 { color: rgba(100, 116, 139, 0.3) !important; }
+.text-white\/80 { color: rgba(255, 255, 255, 0.8) !important; }
+.text-white\/90 { color: rgba(255, 255, 255, 0.9) !important; }
 
-/* Hover states */
+/* ===== HOVER STATES ===== */
 .hover\:bg-primary:hover { background-color: #1a1a4e !important; }
 .hover\:bg-primary-light:hover { background-color: #2d2d7a !important; }
 .hover\:bg-background:hover { background-color: #f8fafc !important; }
 .hover\:bg-danger\/5:hover { background-color: rgba(239, 68, 68, 0.05) !important; }
+.hover\:bg-secondary\/90:hover { background-color: rgba(99, 102, 241, 0.9) !important; }
+.hover\:bg-danger\/90:hover { background-color: rgba(239, 68, 68, 0.9) !important; }
+.hover\:bg-white:hover { background-color: #ffffff !important; }
 .hover\:text-primary:hover { color: #1a1a4e !important; }
 .hover\:text-text-primary:hover { color: #1e293b !important; }
 .hover\:text-danger:hover { color: #ef4444 !important; }
+.hover\:text-white:hover { color: #ffffff !important; }
 .hover\:border-primary:hover { border-color: #1a1a4e !important; }
 .hover\:border-primary\/50:hover { border-color: rgba(26, 26, 78, 0.5) !important; }
 .hover\:border-primary\/20:hover { border-color: rgba(26, 26, 78, 0.2) !important; }
+.hover\:shadow-md:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
 
-/* Focus states */
+/* ===== FOCUS STATES ===== */
 .focus\:ring-primary:focus { --tw-ring-color: #1a1a4e !important; }
 .focus\:ring-secondary:focus { --tw-ring-color: #6366f1 !important; }
 .focus\:ring-danger:focus { --tw-ring-color: #ef4444 !important; }
 
-/* Gradient */
-.from-primary { --tw-gradient-from: #1a1a4e !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
-.to-primary-light { --tw-gradient-to: #2d2d7a !important; }
-.bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)) !important; }
+/* ===== RING COLORS ===== */
+.ring-primary { --tw-ring-color: #1a1a4e; }
+.ring-secondary { --tw-ring-color: #6366f1; }
+.ring-success { --tw-ring-color: #22c55e; }
+.ring-warning { --tw-ring-color: #f59e0b; }
+.ring-danger { --tw-ring-color: #ef4444; }
 
-/* Scrollbar personalizada */
+/* ===== GRADIENTS ===== */
+.gradient-primary {
+  background: linear-gradient(to right, #1a1a4e, #2d2d7a) !important;
+}
+
+.from-primary { --tw-gradient-from: #1a1a4e !important; }
+.to-primary-light { --tw-gradient-to: #2d2d7a !important; }
+
+/* ===== RESPONSIVE SIDEBAR FIX ===== */
+@media (max-width: 1024px) {
+  .ml-64 {
+    margin-left: 0 !important;
+  }
+
+  aside.fixed {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  aside.fixed.open {
+    transform: translateX(0);
+  }
+}
+
+/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -132,7 +178,7 @@ body {
   background: #1a1a4e;
 }
 
-/* React Big Calendar custom styles */
+/* ===== REACT BIG CALENDAR ===== */
 .rbc-calendar {
   font-family: inherit;
 }
@@ -178,13 +224,28 @@ body {
   border-color: #1a1a4e;
 }
 
-/* Ring color fix */
-.ring-primary { --tw-ring-color: #1a1a4e; }
-.ring-success { --tw-ring-color: #22c55e; }
-.ring-warning { --tw-ring-color: #f59e0b; }
-.ring-danger { --tw-ring-color: #ef4444; }
+/* ===== ANIMATIONS ===== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-/* Gradient card fix */
-.gradient-primary {
-  background: linear-gradient(to right, #1a1a4e, #2d2d7a) !important;
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== LINE CLAMP ===== */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ===== DISABLED STATE ===== */
+.disabled\:opacity-50:disabled {
+  opacity: 0.5 !important;
+}
+
+.disabled\:cursor-not-allowed:disabled {
+  cursor: not-allowed !important;
 }
