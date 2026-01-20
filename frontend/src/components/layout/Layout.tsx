@@ -31,16 +31,23 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
       <Sidebar />
 
-      {/* Top bar with notifications and profile */}
-      <div className="fixed top-0 right-0 h-16 flex items-center gap-3 px-6 z-50" style={{ left: '256px' }}>
-        <div className="ml-auto flex items-center gap-3">
+      {/* Top header bar */}
+      <header
+        className="fixed top-0 right-0 h-16 flex items-center justify-end px-6 z-30"
+        style={{
+          left: '256px',
+          backgroundColor: '#f8fafc',
+          borderBottom: '1px solid #e2e8f0'
+        }}
+      >
+        <div className="flex items-center gap-4">
           <NotificationBell />
           <UserAvatar />
         </div>
-      </div>
+      </header>
 
-      <main style={{ marginLeft: '256px', minHeight: '100vh' }}>
-        <div className="p-6 pt-20">
+      <main style={{ marginLeft: '256px', minHeight: '100vh', paddingTop: '64px' }}>
+        <div className="p-6">
           {children}
         </div>
       </main>

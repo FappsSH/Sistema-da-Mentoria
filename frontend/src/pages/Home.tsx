@@ -78,7 +78,10 @@ export function Home() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-8 h-8 border-4 rounded-full animate-spin"
+          style={{ borderColor: '#1a1a4e', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -181,7 +184,7 @@ export function Home() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Próxima Reunião */}
-        <Card>
+        <Card style={{ minHeight: '220px' }}>
           <CardContent>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#1e293b' }}>
@@ -209,11 +212,11 @@ export function Home() {
                 </Badge>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Calendar size={48} className="mx-auto mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
-                <p style={{ color: '#64748b' }}>Nenhuma reunião agendada</p>
+              <div className="flex flex-col items-center justify-center py-6">
+                <Calendar size={48} className="mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
+                <p className="mb-4" style={{ color: '#64748b' }}>Nenhuma reunião agendada</p>
                 <Link to="/agenda">
-                  <Button variant="primary" size="sm" className="mt-4">
+                  <Button variant="primary" size="sm">
                     Agendar reunião
                   </Button>
                 </Link>
@@ -223,7 +226,7 @@ export function Home() {
         </Card>
 
         {/* Últimos Roadmaps Pendentes */}
-        <Card>
+        <Card style={{ minHeight: '220px' }}>
           <CardContent>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#1e293b' }}>
@@ -268,11 +271,11 @@ export function Home() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Route size={48} className="mx-auto mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
-                <p style={{ color: '#64748b' }}>Nenhum checkpoint pendente</p>
+              <div className="flex flex-col items-center justify-center py-6">
+                <Route size={48} className="mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
+                <p className="mb-4" style={{ color: '#64748b' }}>Nenhum checkpoint pendente</p>
                 <Link to="/roadmap">
-                  <Button variant="primary" size="sm" className="mt-4">
+                  <Button variant="primary" size="sm">
                     Criar checkpoint
                   </Button>
                 </Link>

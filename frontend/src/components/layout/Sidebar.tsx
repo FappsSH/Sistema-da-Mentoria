@@ -14,7 +14,7 @@ export function Sidebar() {
     <aside className="sidebar-container">
       {/* Logo */}
       <div className="sidebar-logo">
-        <img src="/logo-fapps.svg" alt="Fapps" className="h-8" />
+        <img src="/logo-fapps.svg" alt="Fapps" style={{ height: '32px' }} />
       </div>
 
       <nav className="p-4">
