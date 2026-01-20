@@ -70,7 +70,7 @@ export function Home() {
         <div className="flex items-center justify-center" style={{ height: '400px' }}>
           <div
             className="w-10 h-10 border-4 rounded-full animate-spin"
-            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+            style={{ borderColor: '#3cdbc0', borderTopColor: 'transparent' }}
           />
         </div>
       </Layout>
@@ -293,7 +293,7 @@ export function Home() {
                   cursor: 'pointer'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Calendar size={20} color="#14b8a6" />
+                    <Calendar size={20} color="#3cdbc0" />
                     <span style={{ fontSize: '14px', color: '#1e293b' }}>Ver Agenda</span>
                   </div>
                   <ChevronRight size={16} color="#64748b" />
@@ -310,7 +310,7 @@ export function Home() {
                   cursor: 'pointer'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <CheckCircle2 size={20} color="#14b8a6" />
+                    <CheckCircle2 size={20} color="#3cdbc0" />
                     <span style={{ fontSize: '14px', color: '#1e293b' }}>Ver Roadmap</span>
                   </div>
                   <ChevronRight size={16} color="#64748b" />

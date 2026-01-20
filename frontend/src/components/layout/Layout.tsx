@@ -6,12 +6,9 @@ import { useAuth } from '../../hooks/useAuth'
 
 interface LayoutProps {
   children: ReactNode
-  title?: string
-  subtitle?: string
-  headerRight?: ReactNode
 }
 
-export function Layout({ children, title, subtitle, headerRight }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const { user, profile, loading } = useAuth()
 
   const getInitials = (name: string) => {
@@ -29,7 +26,7 @@ export function Layout({ children, title, subtitle, headerRight }: LayoutProps) 
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-4 rounded-full animate-spin"
-            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+            style={{ borderColor: '#3cdbc0', borderTopColor: 'transparent' }}
           />
           <p style={{ color: '#64748b' }}>Carregando...</p>
         </div>
@@ -46,20 +43,9 @@ export function Layout({ children, title, subtitle, headerRight }: LayoutProps) 
       <Sidebar />
 
       <div className="main-layout">
-        {/* Header */}
+        {/* Header - apenas notificações e avatar */}
         <header className="main-header">
-          <div className="header-left">
-            {title && (
-              <div>
-                {subtitle && <p className="breadcrumb">{subtitle}</p>}
-                <h1 className="header-title">{title}</h1>
-              </div>
-            )}
-          </div>
-
           <div className="header-right">
-            {headerRight}
-
             {/* Notifications */}
             <div className="notification-bell">
               <Bell size={20} color="#64748b" />

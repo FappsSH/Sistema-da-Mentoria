@@ -115,7 +115,7 @@ export function Agenda() {
         <div className="flex items-center justify-center" style={{ height: '400px' }}>
           <div
             className="w-10 h-10 border-4 rounded-full animate-spin"
-            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+            style={{ borderColor: '#3cdbc0', borderTopColor: 'transparent' }}
           />
         </div>
       </Layout>
@@ -202,7 +202,7 @@ export function Agenda() {
                       cursor: 'pointer',
                       borderRadius: '8px',
                       backgroundColor: isSelected ? '#ccfbf1' : 'transparent',
-                      border: isSelected ? '2px solid #14b8a6' : '2px solid transparent'
+                      border: isSelected ? '2px solid #3cdbc0' : '2px solid transparent'
                     }}
                   >
                     <div>
@@ -212,15 +212,15 @@ export function Agenda() {
                       <p style={{
                         fontSize: '20px',
                         fontWeight: '600',
-                        color: isToday ? '#14b8a6' : '#1e293b'
+                        color: isToday ? '#3cdbc0' : '#1e293b'
                       }}>
                         {format(day, 'd')}
                       </p>
                     </div>
                     {hasEvents && (
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#14b8a6' }} />
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#14b8a6' }} />
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3cdbc0' }} />
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3cdbc0' }} />
                       </div>
                     )}
                   </div>

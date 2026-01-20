@@ -183,7 +183,7 @@ export function ProjetoPage() {
         <div className="flex items-center justify-center" style={{ height: '400px' }}>
           <div
             className="w-10 h-10 border-4 rounded-full animate-spin"
-            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+            style={{ borderColor: '#3cdbc0', borderTopColor: 'transparent' }}
           />
         </div>
       </Layout>
@@ -196,7 +196,7 @@ export function ProjetoPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
           <h1 className="header-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <FolderKanban size={28} color="#14b8a6" />
+            <FolderKanban size={28} color="#3cdbc0" />
             Projetos
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
@@ -303,7 +303,7 @@ export function ProjetoPage() {
                           {projeto.status !== 'concluido' && (
                             <button
                               onClick={() => handleStatusChange(projeto.id, 'concluido')}
-                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#14b8a6', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#3cdbc0', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
                             >
                               <CheckCircle2 size={16} />
                               Concluir

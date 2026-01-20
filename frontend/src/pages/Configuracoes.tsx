@@ -119,7 +119,7 @@ export function Configuracoes() {
                             width: '32px',
                             height: '32px',
                             borderRadius: '50%',
-                            backgroundColor: '#14b8a6',
+                            backgroundColor: '#3cdbc0',
                             border: 'none',
                             color: '#ffffff',
                             cursor: 'pointer',

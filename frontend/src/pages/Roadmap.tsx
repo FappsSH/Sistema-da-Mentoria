@@ -174,7 +174,7 @@ export function RoadmapPage() {
         <div className="flex items-center justify-center" style={{ height: '400px' }}>
           <div
             className="w-10 h-10 border-4 rounded-full animate-spin"
-            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+            style={{ borderColor: '#3cdbc0', borderTopColor: 'transparent' }}
           />
         </div>
       </Layout>
@@ -190,7 +190,7 @@ export function RoadmapPage() {
         <div>
           <h1 className="header-title">Brand Aligned Journey Roadmap</h1>
           {calcularEstimativa() && (
-            <p style={{ fontSize: '14px', color: '#14b8a6', marginTop: '4px' }}>
+            <p style={{ fontSize: '14px', color: '#3cdbc0', marginTop: '4px' }}>
               Estimativa de conclusão: {calcularEstimativa()}
             </p>
           )}
@@ -311,9 +311,9 @@ export function RoadmapPage() {
                       marginTop: '16px',
                       padding: '8px 16px',
                       borderRadius: '6px',
-                      border: '1px solid #14b8a6',
+                      border: '1px solid #3cdbc0',
                       background: 'transparent',
-                      color: '#14b8a6',
+                      color: '#3cdbc0',
                       fontSize: '13px',
                       fontWeight: '500',
                       cursor: 'pointer',
