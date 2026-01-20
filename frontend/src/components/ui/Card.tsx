@@ -1,4 +1,4 @@
-import type { ReactNode, MouseEvent } from 'react'
+import type { ReactNode, MouseEvent, CSSProperties } from 'react'
 
 interface CardProps {
   children: ReactNode
@@ -6,9 +6,10 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
+  style?: CSSProperties
 }
 
-export function Card({ children, className = '', padding = 'md', hover = false, onClick }: CardProps) {
+export function Card({ children, className = '', padding = 'md', hover = false, onClick, style }: CardProps) {
   const paddings = {
     none: '',
     sm: 'p-4',
@@ -16,14 +17,23 @@ export function Card({ children, className = '', padding = 'md', hover = false, 
     lg: 'p-8',
   }
 
+  const baseStyle: CSSProperties = {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    ...style
+  }
+
   return (
     <div
       className={`
-        bg-surface rounded-xl border border-border shadow-sm
+        card-base
         ${paddings[padding]}
-        ${hover ? 'hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer' : ''}
+        ${hover ? 'card-hover cursor-pointer' : ''}
         ${className}
       `}
+      style={baseStyle}
       onClick={onClick}
     >
       {children}

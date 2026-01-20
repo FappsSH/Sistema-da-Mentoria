@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { ButtonHTMLAttributes, ReactNode, CSSProperties, useState } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
@@ -6,6 +6,29 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   fullWidth?: boolean
+}
+
+const variantStyles: Record<string, { base: CSSProperties; hover: CSSProperties }> = {
+  primary: {
+    base: { backgroundColor: '#1a1a4e', color: '#ffffff' },
+    hover: { backgroundColor: '#2d2d7a' }
+  },
+  secondary: {
+    base: { backgroundColor: '#6366f1', color: '#ffffff' },
+    hover: { backgroundColor: '#4f46e5' }
+  },
+  outline: {
+    base: { backgroundColor: 'transparent', color: '#1a1a4e', border: '2px solid #1a1a4e' },
+    hover: { backgroundColor: '#1a1a4e', color: '#ffffff' }
+  },
+  danger: {
+    base: { backgroundColor: '#ef4444', color: '#ffffff' },
+    hover: { backgroundColor: '#dc2626' }
+  },
+  ghost: {
+    base: { backgroundColor: 'transparent', color: '#64748b' },
+    hover: { backgroundColor: '#f8fafc', color: '#1e293b' }
+  }
 }
 
 export function Button({
@@ -16,17 +39,12 @@ export function Button({
   fullWidth = false,
   className = '',
   disabled,
+  style,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
+  const [isHovered, setIsHovered] = useState(false)
 
-  const variants = {
-    primary: 'bg-primary text-white hover:bg-primary-light focus:ring-primary',
-    secondary: 'bg-secondary text-white hover:bg-secondary/90 focus:ring-secondary',
-    outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white focus:ring-primary',
-    danger: 'bg-danger text-white hover:bg-danger/90 focus:ring-danger',
-    ghost: 'text-text-secondary hover:bg-background hover:text-text-primary focus:ring-primary',
-  }
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
 
   const sizes = {
     sm: 'px-3 py-1.5 text-sm',
@@ -34,10 +52,21 @@ export function Button({
     lg: 'px-6 py-3 text-base',
   }
 
+  const currentVariant = variantStyles[variant]
+  const variantStyle: CSSProperties = {
+    ...currentVariant.base,
+    ...(isHovered && !disabled ? currentVariant.hover : {}),
+    ...(disabled ? { opacity: 0.5, cursor: 'not-allowed' } : { cursor: 'pointer' }),
+    ...style
+  }
+
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`${baseStyles} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      style={variantStyle}
       disabled={disabled || isLoading}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       {isLoading ? (
