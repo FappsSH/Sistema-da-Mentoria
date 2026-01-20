@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, Button, Input, Modal, Badge } from '../components/ui'
+import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../services/supabase'
-import { Projeto, Roadmap, StatusProjeto } from '../types'
+import { Projeto, StatusProjeto } from '../types'
 import {
   FolderKanban,
   Plus,
@@ -14,6 +14,7 @@ import {
   Trash2,
   PauseCircle,
   PlayCircle,
+  X,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -50,7 +51,6 @@ export function ProjetoPage() {
       .order('created_at', { ascending: false })
 
     if (!error && projetosData) {
-      // Buscar roadmaps para cada projeto
       const projetosComMetricas = await Promise.all(
         projetosData.map(async (projeto) => {
           const { data: roadmaps } = await supabase
@@ -132,10 +132,7 @@ export function ProjetoPage() {
       return
     }
 
-    // Excluir roadmaps primeiro
     await supabase.from('roadmaps').delete().eq('projeto_id', projetoId)
-
-    // Excluir projeto
     const { error } = await supabase.from('projetos').delete().eq('id', projetoId)
 
     if (!error) {
@@ -163,15 +160,14 @@ export function ProjetoPage() {
   const getStatusBadge = (status: StatusProjeto) => {
     switch (status) {
       case 'ativo':
-        return <Badge variant="success">Ativo</Badge>
+        return <span className="badge badge-success">Ativo</span>
       case 'concluido':
-        return <Badge variant="info">Concluído</Badge>
+        return <span className="badge badge-primary">Concluído</span>
       case 'pausado':
-        return <Badge variant="warning">Pausado</Badge>
+        return <span className="badge badge-warning">Pausado</span>
     }
   }
 
-  // Métricas gerais
   const metricasGerais = projetos.reduce(
     (acc, p) => ({
       pendentes: acc.pendentes + p.metricas.pendentes,
@@ -183,244 +179,261 @@ export function ProjetoPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div
+            className="w-10 h-10 border-4 rounded-full animate-spin"
+            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+          />
+        </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <Layout>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-            <FolderKanban className="text-primary" />
+          <h1 className="header-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <FolderKanban size={28} color="#14b8a6" />
             Projetos
           </h1>
-          <p className="text-text-secondary mt-1">
+          <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
             Gerencie seus projetos de mentoria
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus size={18} className="mr-2" />
+        <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
+          <Plus size={18} />
           Novo Projeto
-        </Button>
+        </button>
       </div>
 
       {/* Métricas Gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
-                <Clock className="text-warning" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-text-secondary">Em Aberto</p>
-                <p className="text-2xl font-bold text-text-primary">{metricasGerais.pendentes}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div className="metric-card">
+          <div className="metric-card-icon warning">
+            <Clock size={24} />
+          </div>
+          <p className="metric-card-label">Em Aberto</p>
+          <p className="metric-card-value">{metricasGerais.pendentes}</p>
+        </div>
 
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
-                <CheckCircle2 className="text-success" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-text-secondary">Concluídos</p>
-                <p className="text-2xl font-bold text-text-primary">{metricasGerais.concluidos}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="metric-card">
+          <div className="metric-card-icon success">
+            <CheckCircle2 size={24} />
+          </div>
+          <p className="metric-card-label">Concluídos</p>
+          <p className="metric-card-value">{metricasGerais.concluidos}</p>
+        </div>
 
-        <Card>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-danger/10 rounded-xl flex items-center justify-center">
-                <AlertTriangle className="text-danger" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-text-secondary">Atrasados</p>
-                <p className="text-2xl font-bold text-text-primary">{metricasGerais.vencidos}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="metric-card">
+          <div className="metric-card-icon danger">
+            <AlertTriangle size={24} />
+          </div>
+          <p className="metric-card-label">Atrasados</p>
+          <p className="metric-card-value">{metricasGerais.vencidos}</p>
+        </div>
       </div>
 
       {/* Lista de Projetos */}
       {projetos.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projetos.map((projeto) => (
-            <Card key={projeto.id} hover>
-              <CardContent>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-text-primary truncate">{projeto.nome}</h3>
-                    <p className="text-sm text-text-secondary mt-1 line-clamp-2">
-                      {projeto.descricao || 'Sem descrição'}
-                    </p>
-                  </div>
-                  <div className="relative ml-2">
-                    <button
-                      onClick={() => setMenuOpen(menuOpen === projeto.id ? null : projeto.id)}
-                      className="p-1 rounded hover:bg-background transition-colors"
-                    >
-                      <MoreVertical size={18} className="text-text-secondary" />
-                    </button>
-                    {menuOpen === projeto.id && (
-                      <div className="absolute right-0 mt-1 w-48 bg-surface rounded-lg shadow-lg border border-border z-10">
-                        <button
-                          onClick={() => openEditModal(projeto)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-background transition-colors"
-                        >
-                          <Pencil size={16} />
-                          Editar
-                        </button>
-                        {projeto.status !== 'ativo' && (
-                          <button
-                            onClick={() => handleStatusChange(projeto.id, 'ativo')}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-success hover:bg-background transition-colors"
-                          >
-                            <PlayCircle size={16} />
-                            Ativar
-                          </button>
-                        )}
-                        {projeto.status === 'ativo' && (
-                          <button
-                            onClick={() => handleStatusChange(projeto.id, 'pausado')}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-warning hover:bg-background transition-colors"
-                          >
-                            <PauseCircle size={16} />
-                            Pausar
-                          </button>
-                        )}
-                        {projeto.status !== 'concluido' && (
-                          <button
-                            onClick={() => handleStatusChange(projeto.id, 'concluido')}
-                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-secondary hover:bg-background transition-colors"
-                          >
-                            <CheckCircle2 size={16} />
-                            Concluir
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(projeto.id)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-danger hover:bg-background transition-colors"
-                        >
-                          <Trash2 size={16} />
-                          Excluir
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+          {projetos.map((projeto) => {
+            const progressPercent = projeto.metricas.total > 0
+              ? (projeto.metricas.concluidos / projeto.metricas.total) * 100
+              : 0
 
-                <div className="flex items-center gap-2 mb-4">
-                  {getStatusBadge(projeto.status)}
-                  <span className="text-xs text-text-secondary">
-                    Criado em {format(new Date(projeto.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                  </span>
-                </div>
+            return (
+              <div key={projeto.id} className="card" style={{ position: 'relative' }}>
+                <div className="card-body">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontWeight: '600', color: '#1e293b', fontSize: '16px', marginBottom: '4px' }}>
+                        {projeto.nome}
+                      </h3>
+                      <p style={{ fontSize: '13px', color: '#64748b', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {projeto.descricao || 'Sem descrição'}
+                      </p>
+                    </div>
+                    <div style={{ position: 'relative', marginLeft: '12px' }}>
+                      <button
+                        onClick={() => setMenuOpen(menuOpen === projeto.id ? null : projeto.id)}
+                        style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+                      {menuOpen === projeto.id && (
+                        <div style={{
+                          position: 'absolute',
+                          right: 0,
+                          marginTop: '4px',
+                          width: '180px',
+                          backgroundColor: 'white',
+                          borderRadius: '8px',
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                          border: '1px solid #e2e8f0',
+                          zIndex: 10
+                        }}>
+                          <button
+                            onClick={() => openEditModal(projeto)}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#1e293b', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                          >
+                            <Pencil size={16} />
+                            Editar
+                          </button>
+                          {projeto.status !== 'ativo' && (
+                            <button
+                              onClick={() => handleStatusChange(projeto.id, 'ativo')}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#22c55e', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                              <PlayCircle size={16} />
+                              Ativar
+                            </button>
+                          )}
+                          {projeto.status === 'ativo' && (
+                            <button
+                              onClick={() => handleStatusChange(projeto.id, 'pausado')}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#f59e0b', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                              <PauseCircle size={16} />
+                              Pausar
+                            </button>
+                          )}
+                          {projeto.status !== 'concluido' && (
+                            <button
+                              onClick={() => handleStatusChange(projeto.id, 'concluido')}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#14b8a6', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                              <CheckCircle2 size={16} />
+                              Concluir
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(projeto.id)}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '14px', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                          >
+                            <Trash2 size={16} />
+                            Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-                {/* Progress bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-text-secondary">
-                    <span>Progresso</span>
-                    <span>
-                      {projeto.metricas.concluidos}/{projeto.metricas.total} checkpoints
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    {getStatusBadge(projeto.status)}
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      Criado em {format(new Date(projeto.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </span>
                   </div>
-                  <div className="w-full bg-background rounded-full h-2">
-                    <div
-                      className="bg-success h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: projeto.metricas.total > 0
-                          ? `${(projeto.metricas.concluidos / projeto.metricas.total) * 100}%`
-                          : '0%',
-                      }}
-                    />
-                  </div>
-                </div>
 
-                {/* Mini métricas */}
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center gap-1 text-sm">
-                    <Clock size={14} className="text-warning" />
-                    <span className="text-text-secondary">{projeto.metricas.pendentes}</span>
+                  {/* Progress bar */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                      <span>Progresso</span>
+                      <span>{projeto.metricas.concluidos}/{projeto.metricas.total} checkpoints</span>
+                    </div>
+                    <div className="progress-bar" style={{ height: '6px' }}>
+                      <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <CheckCircle2 size={14} className="text-success" />
-                    <span className="text-text-secondary">{projeto.metricas.concluidos}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <AlertTriangle size={14} className="text-danger" />
-                    <span className="text-text-secondary">{projeto.metricas.vencidos}</span>
+
+                  {/* Mini métricas */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
+                      <Clock size={14} color="#f59e0b" />
+                      <span style={{ color: '#64748b' }}>{projeto.metricas.pendentes}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
+                      <CheckCircle2 size={14} color="#22c55e" />
+                      <span style={{ color: '#64748b' }}>{projeto.metricas.concluidos}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
+                      <AlertTriangle size={14} color="#ef4444" />
+                      <span style={{ color: '#64748b' }}>{projeto.metricas.vencidos}</span>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            )
+          })}
         </div>
       ) : (
-        <Card>
-          <CardContent className="text-center py-12">
-            <FolderKanban size={48} className="mx-auto text-text-secondary/30 mb-4" />
-            <h3 className="text-lg font-semibold text-text-primary">Nenhum projeto ainda</h3>
-            <p className="text-text-secondary mt-1 mb-4">
+        <div className="card">
+          <div className="card-body" style={{ textAlign: 'center', padding: '48px' }}>
+            <FolderKanban size={48} color="#64748b" style={{ marginBottom: '16px', opacity: 0.3 }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>
+              Nenhum projeto ainda
+            </h3>
+            <p style={{ color: '#64748b', marginBottom: '16px' }}>
               Crie seu primeiro projeto para começar a organizar seus checkpoints
             </p>
-            <Button onClick={() => setModalOpen(true)}>
-              <Plus size={18} className="mr-2" />
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
+              <Plus size={18} />
               Criar Projeto
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* Modal Novo/Editar Projeto */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        title={editingProjeto ? 'Editar Projeto' : 'Novo Projeto'}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Nome do projeto"
-            placeholder="Ex: App de delivery"
-            value={formData.nome}
-            onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-            required
-          />
+      {/* Modal */}
+      {modalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px', margin: '16px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="card-title">{editingProjeto ? 'Editar Projeto' : 'Novo Projeto'}</h2>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} color="#64748b" />
+              </button>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Nome do projeto</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ex: App de delivery"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">
-              Descrição (opcional)
-            </label>
-            <textarea
-              className="w-full px-4 py-2.5 rounded-lg border border-border bg-surface text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-              rows={3}
-              placeholder="Descreva brevemente o projeto..."
-              value={formData.descricao}
-              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-            />
-          </div>
+                <div className="form-group">
+                  <label className="form-label">Descrição (opcional)</label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="Descreva brevemente o projeto..."
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    style={{ resize: 'none' }}
+                  />
+                </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={closeModal} fullWidth>
-              Cancelar
-            </Button>
-            <Button type="submit" isLoading={submitting} fullWidth>
-              {editingProjeto ? 'Salvar' : 'Criar'}
-            </Button>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={closeModal} style={{ flex: 1 }}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={submitting} style={{ flex: 1 }}>
+                    {submitting ? 'Salvando...' : (editingProjeto ? 'Salvar' : 'Criar')}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </form>
-      </Modal>
-    </div>
+        </div>
+      )}
+    </Layout>
   )
 }

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, Button, Input, Badge } from '../components/ui'
+import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
-import { Settings, User, Mail, Phone, Package, Clock, Camera } from 'lucide-react'
+import { User, CreditCard, Shield, Pencil, Star } from 'lucide-react'
+
+type TabType = 'profile' | 'subscription' | 'security'
 
 export function Configuracoes() {
   const { profile, updateProfile } = useAuth()
+  const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [formData, setFormData] = useState({
     nome_completo: '',
     telefone: '',
@@ -39,216 +42,239 @@ export function Configuracoes() {
     setLoading(false)
   }
 
-  const getPacoteLabel = (pacote: string | undefined) => {
-    switch (pacote) {
-      case 'basico':
-        return { label: 'Básico', horas: 5 }
-      case 'intermediario':
-        return { label: 'Intermediário', horas: 10 }
-      case 'avancado':
-        return { label: 'Avançado', horas: profile?.horas_contratadas || 0 }
-      default:
-        return { label: 'Não definido', horas: 0 }
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
   }
 
-  const pacoteInfo = getPacoteLabel(profile?.pacote)
+  const tabs = [
+    { id: 'profile' as TabType, label: 'Profile Info', icon: User },
+    { id: 'subscription' as TabType, label: 'Subscription', icon: CreditCard },
+    { id: 'security' as TabType, label: 'Security', icon: Shield },
+  ]
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <Layout>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-          <Settings className="text-primary" />
-          Configurações
-        </h1>
-        <p className="text-text-secondary mt-1">
-          Gerencie suas informações pessoais
-        </p>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 className="header-title">Profile Hub</h1>
       </div>
 
-      {/* Perfil */}
-      <Card>
-        <CardContent>
-          <h2 className="text-lg font-semibold text-text-primary mb-6">Informações do Perfil</h2>
+      <div style={{ display: 'flex', gap: '24px' }}>
+        {/* Left Tabs */}
+        <div style={{ width: '240px', flexShrink: 0 }}>
+          <div className="tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <tab.icon size={18} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar */}
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                {profile?.foto_url ? (
-                  <img
-                    src={profile.foto_url}
-                    alt={profile.nome_completo}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-border"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
-                    {profile?.nome_completo?.charAt(0).toUpperCase() || 'U'}
+        {/* Main Content */}
+        <div style={{ flex: 1 }}>
+          {activeTab === 'profile' && (
+            <>
+              {/* Personal Information */}
+              <div className="card" style={{ marginBottom: '24px' }}>
+                <div className="card-header">
+                  <h2 className="card-title">Personal Information</h2>
+                  <p className="card-subtitle">Update your personal details and how others see you.</p>
+                </div>
+                <div className="card-body">
+                  <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+                      {/* Avatar */}
+                      <div style={{ position: 'relative' }}>
+                        <div style={{
+                          width: '120px',
+                          height: '120px',
+                          borderRadius: '50%',
+                          backgroundColor: '#fce7d6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '32px',
+                          fontWeight: '600',
+                          color: '#1e293b'
+                        }}>
+                          {profile?.nome_completo ? getInitials(profile.nome_completo) : 'U'}
+                        </div>
+                        <button
+                          type="button"
+                          style={{
+                            position: 'absolute',
+                            bottom: '4px',
+                            right: '4px',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            backgroundColor: '#14b8a6',
+                            border: 'none',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
+
+                      {/* Form Fields */}
+                      <div style={{ flex: 1 }}>
+                        {success && (
+                          <div style={{
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            border: '1px solid rgba(34, 197, 94, 0.2)',
+                            color: '#22c55e',
+                            padding: '12px 16px',
+                            borderRadius: '8px',
+                            marginBottom: '20px',
+                            fontSize: '14px'
+                          }}>
+                            Informações atualizadas com sucesso!
+                          </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                          <div className="form-group">
+                            <label className="form-label">FULL NAME</label>
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={formData.nome_completo}
+                              onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
+                              required
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">EMAIL ADDRESS</label>
+                            <input
+                              type="email"
+                              className="form-input"
+                              value={profile?.email || ''}
+                              disabled
+                              style={{ backgroundColor: '#f8fafc' }}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">PHONE NUMBER</label>
+                            <input
+                              type="tel"
+                              className="form-input"
+                              placeholder="(00) 00000-0000"
+                              value={formData.telefone}
+                              onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">LOCATION</label>
+                            <select className="form-input">
+                              <option>São Paulo, Brazil</option>
+                              <option>Rio de Janeiro, Brazil</option>
+                              <option>Other</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                          <button type="submit" className="btn btn-primary" disabled={loading}>
+                            {loading ? 'Salvando...' : 'Save Changes'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {/* Membership Package */}
+              <div className="card">
+                <div className="card-header">
+                  <h2 className="card-title">Mentorship Package</h2>
+                  <p className="card-subtitle">Overview of your current membership benefits.</p>
+                </div>
+                <div className="card-body">
+                  <div className="membership-card">
+                    <div className="membership-card-badge">PREMIUM MEMBER</div>
+                    <div className="membership-card-name">{profile?.nome_completo}</div>
+
+                    <div className="membership-card-hours">{profile?.horas_contratadas || 0}h Mentorship</div>
+                    <div className="membership-card-label">Exclusive Access Included</div>
+
+                    <div className="progress-bar" style={{ backgroundColor: 'rgba(255,255,255,0.2)', marginTop: '16px' }}>
+                      <div
+                        className="progress-bar-fill"
+                        style={{
+                          width: profile?.horas_contratadas
+                            ? `${Math.min((profile.horas_utilizadas / profile.horas_contratadas) * 100, 100)}%`
+                            : '0%',
+                          backgroundColor: '#ffffff'
+                        }}
+                      />
+                    </div>
+
+                    <div className="membership-card-id">
+                      <div className="membership-card-id-label">MEMBER CARD</div>
+                      <div className="membership-card-id-value">
+                        #{new Date().getFullYear()}-{profile?.nome_completo?.split(' ').map(n => n[0]).join('').toUpperCase() || 'XX'}
+                      </div>
+                      <div style={{ marginTop: '12px', opacity: 0.5 }}>
+                        <Star size={40} />
+                      </div>
+                    </div>
+
+                    <div style={{ position: 'absolute', bottom: '24px', right: '24px', fontSize: '13px' }}>
+                      {profile?.horas_utilizadas || 0}h / {profile?.horas_contratadas || 0}h Used
+                    </div>
                   </div>
-                )}
-                <button
-                  type="button"
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-light transition-colors"
-                  title="Alterar foto (em breve)"
-                >
-                  <Camera size={16} />
-                </button>
-              </div>
-              <div>
-                <h3 className="font-semibold text-text-primary">{profile?.nome_completo}</h3>
-                <p className="text-text-secondary">{profile?.email}</p>
-              </div>
-            </div>
-
-            {/* Success Message */}
-            {success && (
-              <div className="bg-success/10 border border-success/20 text-success px-4 py-3 rounded-lg text-sm">
-                Informações atualizadas com sucesso!
-              </div>
-            )}
-
-            {/* Form fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <User size={18} className="absolute left-4 top-9 text-text-secondary" />
-                <Input
-                  label="Nome completo"
-                  value={formData.nome_completo}
-                  onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
-                  className="pl-11"
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <Mail size={18} className="absolute left-4 top-9 text-text-secondary" />
-                <Input
-                  label="Email"
-                  value={profile?.email || ''}
-                  className="pl-11"
-                  disabled
-                  helperText="O email não pode ser alterado"
-                />
-              </div>
-
-              <div className="relative md:col-span-2">
-                <Phone size={18} className="absolute left-4 top-9 text-text-secondary" />
-                <Input
-                  label="Telefone"
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  className="pl-11"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" isLoading={loading}>
-                Salvar alterações
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Informações do Pacote */}
-      <Card>
-        <CardContent>
-          <h2 className="text-lg font-semibold text-text-primary mb-6">Seu Pacote</h2>
-
-          <div className="gradient-primary rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Package size={28} />
-                </div>
-                <div>
-                  <Badge className="bg-white/20 text-white mb-1">
-                    Pacote {pacoteInfo.label}
-                  </Badge>
-                  <h3 className="text-2xl font-bold">{pacoteInfo.horas}h de mentoria</h3>
                 </div>
               </div>
-            </div>
+            </>
+          )}
 
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white/80">Horas utilizadas</span>
-                <span className="font-semibold">
-                  {profile?.horas_utilizadas || 0}h / {profile?.horas_contratadas || 0}h
-                </span>
+          {activeTab === 'subscription' && (
+            <div className="card">
+              <div className="card-header">
+                <h2 className="card-title">Subscription Details</h2>
+                <p className="card-subtitle">Manage your subscription and billing information.</p>
               </div>
-              <div className="w-full bg-white/20 rounded-full h-3">
-                <div
-                  className="bg-white h-3 rounded-full transition-all duration-500"
-                  style={{
-                    width: profile?.horas_contratadas
-                      ? `${Math.min((profile.horas_utilizadas / profile.horas_contratadas) * 100, 100)}%`
-                      : '0%',
-                  }}
-                />
-              </div>
-              <p className="text-white/80 text-sm mt-2">
-                Você ainda tem {(profile?.horas_contratadas || 0) - (profile?.horas_utilizadas || 0)}h disponíveis
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 bg-background rounded-lg">
-            <div className="flex items-start gap-3">
-              <Clock size={20} className="text-primary mt-0.5" />
-              <div>
-                <h4 className="font-medium text-text-primary">Precisa de mais horas?</h4>
-                <p className="text-sm text-text-secondary mt-1">
-                  Entre em contato conosco para fazer um upgrade do seu pacote ou contratar horas adicionais.
-                </p>
+              <div className="card-body" style={{ textAlign: 'center', padding: '48px' }}>
+                <CreditCard size={48} color="#64748b" style={{ marginBottom: '16px' }} />
+                <p style={{ color: '#64748b' }}>Funcionalidade em desenvolvimento</p>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
 
-      {/* Informações da Conta */}
-      <Card>
-        <CardContent>
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Informações da Conta</h2>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-border">
-              <div>
-                <p className="font-medium text-text-primary">Conta criada em</p>
-                <p className="text-sm text-text-secondary">
-                  {profile?.created_at
-                    ? new Date(profile.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : '-'}
-                </p>
+          {activeTab === 'security' && (
+            <div className="card">
+              <div className="card-header">
+                <h2 className="card-title">Security Settings</h2>
+                <p className="card-subtitle">Manage your account security and privacy.</p>
+              </div>
+              <div className="card-body" style={{ textAlign: 'center', padding: '48px' }}>
+                <Shield size={48} color="#64748b" style={{ marginBottom: '16px' }} />
+                <p style={{ color: '#64748b' }}>Funcionalidade em desenvolvimento</p>
               </div>
             </div>
-
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="font-medium text-text-primary">Última atualização</p>
-                <p className="text-sm text-text-secondary">
-                  {profile?.updated_at
-                    ? new Date(profile.updated_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : '-'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          )}
+        </div>
+      </div>
+    </Layout>
   )
 }
