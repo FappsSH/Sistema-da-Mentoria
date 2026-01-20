@@ -1,19 +1,17 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, Button, Input, Modal, Badge } from '../components/ui'
+import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../services/supabase'
 import { Roadmap, Projeto, StatusRoadmap } from '../types'
 import {
-  Route,
   Plus,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
   Pencil,
   Trash2,
-  Filter,
+  Download,
   Calendar,
-  Target,
+  MessageSquare,
+  X,
 } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -29,8 +27,6 @@ export function RoadmapPage() {
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingRoadmap, setEditingRoadmap] = useState<Roadmap | null>(null)
-  const [filter, setFilter] = useState<StatusRoadmap | 'todos'>('todos')
-  const [selectedProjeto, setSelectedProjeto] = useState<string>('todos')
   const [formData, setFormData] = useState({
     titulo: '',
     descricao: '',
@@ -42,7 +38,6 @@ export function RoadmapPage() {
   const fetchData = useCallback(async () => {
     if (!profile) return
 
-    // Buscar projetos do usuário
     const { data: projetosData } = await supabase
       .from('projetos')
       .select('*')
@@ -53,7 +48,6 @@ export function RoadmapPage() {
       setProjetos(projetosData)
     }
 
-    // Buscar roadmaps
     const { data: roadmapsData } = await supabase
       .from('roadmaps')
       .select('*, projetos(*)')
@@ -75,41 +69,6 @@ export function RoadmapPage() {
     fetchData()
   }, [fetchData])
 
-  // Verificar e atualizar roadmaps vencidos
-  useEffect(() => {
-    const checkVencidos = async () => {
-      const hoje = new Date()
-      hoje.setHours(0, 0, 0, 0)
-
-      const vencidos = roadmaps.filter(
-        r => r.status === 'pendente' && r.data_prazo && new Date(r.data_prazo) < hoje
-      )
-
-      for (const roadmap of vencidos) {
-        await supabase
-          .from('roadmaps')
-          .update({ status: 'vencido', updated_at: new Date().toISOString() })
-          .eq('id', roadmap.id)
-
-        // Criar notificação
-        await supabase.from('notificacoes').insert({
-          user_id: profile?.id,
-          tipo: 'roadmap_vencido',
-          titulo: 'Checkpoint vencido',
-          mensagem: `O checkpoint "${roadmap.titulo}" passou do prazo.`,
-          referencia_id: roadmap.id,
-          referencia_tipo: 'roadmap',
-        })
-      }
-
-      if (vencidos.length > 0) {
-        fetchData()
-      }
-    }
-
-    checkVencidos()
-  }, [roadmaps, profile, fetchData])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!profile) return
@@ -117,7 +76,7 @@ export function RoadmapPage() {
     setSubmitting(true)
 
     if (editingRoadmap) {
-      const { error } = await supabase
+      await supabase
         .from('roadmaps')
         .update({
           titulo: formData.titulo,
@@ -127,17 +86,12 @@ export function RoadmapPage() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingRoadmap.id)
-
-      if (!error) {
-        await fetchData()
-        closeModal()
-      }
     } else {
       const maxOrdem = roadmaps
         .filter(r => r.projeto_id === formData.projeto_id)
         .reduce((max, r) => Math.max(max, r.ordem), 0)
 
-      const { error } = await supabase.from('roadmaps').insert({
+      await supabase.from('roadmaps').insert({
         projeto_id: formData.projeto_id,
         titulo: formData.titulo,
         descricao: formData.descricao || null,
@@ -145,13 +99,10 @@ export function RoadmapPage() {
         data_prazo: formData.data_prazo || null,
         ordem: maxOrdem + 1,
       })
-
-      if (!error) {
-        await fetchData()
-        closeModal()
-      }
     }
 
+    await fetchData()
+    closeModal()
     setSubmitting(false)
   }
 
@@ -165,24 +116,18 @@ export function RoadmapPage() {
       updateData.data_conclusao = new Date().toISOString()
     }
 
-    const { error } = await supabase
+    await supabase
       .from('roadmaps')
       .update(updateData)
       .eq('id', roadmapId)
 
-    if (!error) {
-      await fetchData()
-    }
+    await fetchData()
   }
 
   const handleDelete = async (roadmapId: string) => {
     if (!confirm('Tem certeza que deseja excluir este checkpoint?')) return
-
-    const { error } = await supabase.from('roadmaps').delete().eq('id', roadmapId)
-
-    if (!error) {
-      await fetchData()
-    }
+    await supabase.from('roadmaps').delete().eq('id', roadmapId)
+    await fetchData()
   }
 
   const openEditModal = (roadmap: Roadmap) => {
@@ -202,375 +147,273 @@ export function RoadmapPage() {
     setFormData({ titulo: '', descricao: '', projeto_id: projetos[0]?.id || '', data_prazo: '' })
   }
 
-  const getStatusBadge = (status: StatusRoadmap) => {
-    switch (status) {
-      case 'pendente':
-        return <Badge variant="warning">Pendente</Badge>
-      case 'concluido':
-        return <Badge variant="success">Concluído</Badge>
-      case 'vencido':
-        return <Badge variant="danger">Vencido</Badge>
-    }
-  }
-
-  const getDaysInfo = (dataPrazo: string | null, status: StatusRoadmap) => {
-    if (!dataPrazo || status === 'concluido') return null
-
-    const dias = differenceInDays(new Date(dataPrazo), new Date())
-
-    if (dias < 0) {
-      return <span className="text-danger text-sm">{Math.abs(dias)} dias atrasado</span>
-    } else if (dias === 0) {
-      return <span className="text-warning text-sm">Vence hoje</span>
-    } else if (dias <= 3) {
-      return <span className="text-warning text-sm">{dias} dias restantes</span>
-    } else {
-      return <span className="text-text-secondary text-sm">{dias} dias restantes</span>
-    }
-  }
-
-  // Filtrar roadmaps
-  const filteredRoadmaps = roadmaps.filter(r => {
-    if (filter !== 'todos' && r.status !== filter) return false
-    if (selectedProjeto !== 'todos' && r.projeto_id !== selectedProjeto) return false
-    return true
-  })
-
-  // Métricas
   const metricas = {
-    pendentes: roadmaps.filter(r => r.status === 'pendente').length,
     concluidos: roadmaps.filter(r => r.status === 'concluido').length,
-    vencidos: roadmaps.filter(r => r.status === 'vencido').length,
     total: roadmaps.length,
   }
 
-  // Estimativa de conclusão
   const calcularEstimativa = () => {
-    if (metricas.total === 0) return null
-
-    const percentualConcluido = (metricas.concluidos / metricas.total) * 100
-
-    if (percentualConcluido === 100) return 'Projeto concluído!'
-
     const roadmapsComPrazo = roadmaps.filter(r => r.data_prazo && r.status !== 'concluido')
-    if (roadmapsComPrazo.length === 0) return 'Sem prazo definido'
-
+    if (roadmapsComPrazo.length === 0) return null
     const ultimoPrazo = roadmapsComPrazo.reduce((max, r) => {
       const data = new Date(r.data_prazo!)
       return data > max ? data : max
     }, new Date(0))
-
     return format(ultimoPrazo, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+  }
+
+  const getMarkerClass = (status: StatusRoadmap, index: number) => {
+    if (status === 'concluido') return 'timeline-marker completed'
+    if (status === 'pendente' && index === roadmaps.findIndex(r => r.status === 'pendente')) return 'timeline-marker active'
+    return 'timeline-marker pending'
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div
+            className="w-10 h-10 border-4 rounded-full animate-spin"
+            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+          />
+        </div>
+      </Layout>
     )
   }
 
+  const progressPercent = metricas.total > 0 ? (metricas.concluidos / metricas.total) * 100 : 0
+
   return (
-    <div className="space-y-6">
+    <Layout>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-            <Route className="text-primary" />
-            Roadmap
-          </h1>
-          <p className="text-text-secondary mt-1">
-            Gerencie os checkpoints do seu projeto
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setFormData({ titulo: '', descricao: '', projeto_id: projetos[0]?.id || '', data_prazo: '' })
-            setModalOpen(true)
-          }}
-          disabled={projetos.length === 0}
-        >
-          <Plus size={18} className="mr-2" />
-          Novo Checkpoint
-        </Button>
-      </div>
-
-      {/* Progresso Geral */}
-      <Card className="gradient-primary text-white">
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold">Progresso Geral</h3>
-              <p className="text-white/80 text-sm">
-                {metricas.concluidos} de {metricas.total} checkpoints concluídos
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold">
-                {metricas.total > 0 ? Math.round((metricas.concluidos / metricas.total) * 100) : 0}%
-              </div>
-            </div>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-3">
-            <div
-              className="bg-white h-3 rounded-full transition-all duration-500"
-              style={{
-                width: metricas.total > 0 ? `${(metricas.concluidos / metricas.total) * 100}%` : '0%',
-              }}
-            />
-          </div>
+          <h1 className="header-title">Brand Aligned Journey Roadmap</h1>
           {calcularEstimativa() && (
-            <div className="mt-4 flex items-center gap-2 text-white/90">
-              <Target size={16} />
-              <span className="text-sm">Estimativa de conclusão: {calcularEstimativa()}</span>
-            </div>
+            <p style={{ fontSize: '14px', color: '#14b8a6', marginTop: '4px' }}>
+              Estimativa de conclusão: {calcularEstimativa()}
+            </p>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Métricas Rápidas */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card
-          hover
-          className={`cursor-pointer ${filter === 'pendente' ? 'ring-2 ring-warning' : ''}`}
-          onClick={() => setFilter(filter === 'pendente' ? 'todos' : 'pendente')}
-        >
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <Clock className="text-warning" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">{metricas.pendentes}</p>
-                <p className="text-sm text-text-secondary">Pendentes</p>
-              </div>
+          {/* Progress bar */}
+          <div style={{ marginTop: '16px', width: '400px' }}>
+            <div className="progress-bar" style={{ height: '8px' }}>
+              <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          hover
-          className={`cursor-pointer ${filter === 'concluido' ? 'ring-2 ring-success' : ''}`}
-          onClick={() => setFilter(filter === 'concluido' ? 'todos' : 'concluido')}
-        >
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="text-success" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">{metricas.concluidos}</p>
-                <p className="text-sm text-text-secondary">Concluídos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          hover
-          className={`cursor-pointer ${filter === 'vencido' ? 'ring-2 ring-danger' : ''}`}
-          onClick={() => setFilter(filter === 'vencido' ? 'todos' : 'vencido')}
-        >
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="text-danger" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">{metricas.vencidos}</p>
-                <p className="text-sm text-text-secondary">Vencidos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="btn btn-secondary">
+            <Download size={18} />
+            Export
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setFormData({ titulo: '', descricao: '', projeto_id: projetos[0]?.id || '', data_prazo: '' })
+              setModalOpen(true)
+            }}
+            disabled={projetos.length === 0}
+          >
+            <Plus size={18} />
+            Novo Passo
+          </button>
+        </div>
       </div>
 
-      {/* Filtros */}
-      {projetos.length > 1 && (
-        <div className="flex items-center gap-4">
-          <Filter size={18} className="text-text-secondary" />
-          <select
-            value={selectedProjeto}
-            onChange={(e) => setSelectedProjeto(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="todos">Todos os projetos</option>
-            {projetos.map((p) => (
-              <option key={p.id} value={p.id}>{p.nome}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Lista de Roadmaps */}
+      {/* Timeline */}
       {projetos.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Route size={48} className="mx-auto text-text-secondary/30 mb-4" />
-            <h3 className="text-lg font-semibold text-text-primary">Crie um projeto primeiro</h3>
-            <p className="text-text-secondary mt-1">
-              Você precisa ter um projeto para adicionar checkpoints
-            </p>
-          </CardContent>
-        </Card>
-      ) : filteredRoadmaps.length > 0 ? (
-        <div className="space-y-3">
-          {filteredRoadmaps.map((roadmap) => (
-            <Card key={roadmap.id}>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  {/* Checkbox de conclusão */}
-                  <button
-                    onClick={() =>
-                      handleStatusChange(
-                        roadmap.id,
-                        roadmap.status === 'concluido' ? 'pendente' : 'concluido'
-                      )
-                    }
-                    className={`
-                      w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
-                      ${roadmap.status === 'concluido'
-                        ? 'bg-success border-success text-white'
-                        : 'border-border hover:border-primary'
-                      }
-                    `}
-                  >
-                    {roadmap.status === 'concluido' && <CheckCircle2 size={14} />}
-                  </button>
+        <div className="card">
+          <div className="card-body" style={{ textAlign: 'center', padding: '48px' }}>
+            <p style={{ color: '#64748b' }}>Crie um projeto primeiro para adicionar checkpoints</p>
+          </div>
+        </div>
+      ) : roadmaps.length === 0 ? (
+        <div className="card">
+          <div className="card-body" style={{ textAlign: 'center', padding: '48px' }}>
+            <p style={{ color: '#64748b', marginBottom: '16px' }}>Nenhum checkpoint ainda</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => setModalOpen(true)}
+            >
+              <Plus size={18} />
+              Criar primeiro checkpoint
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="timeline">
+          {roadmaps.map((roadmap, index) => (
+            <div key={roadmap.id} className="timeline-item">
+              {/* Line */}
+              {index < roadmaps.length - 1 && <div className="timeline-line" />}
 
-                  {/* Conteúdo */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3
-                        className={`font-medium ${
-                          roadmap.status === 'concluido'
-                            ? 'text-text-secondary line-through'
-                            : 'text-text-primary'
-                        }`}
-                      >
-                        {roadmap.titulo}
-                      </h3>
-                      {getStatusBadge(roadmap.status)}
-                      {roadmap.projeto && (
-                        <Badge variant="default" size="sm">
-                          {roadmap.projeto.nome}
-                        </Badge>
-                      )}
-                    </div>
+              {/* Marker */}
+              <div className={getMarkerClass(roadmap.status, index)}>
+                {roadmap.status === 'concluido' ? (
+                  <CheckCircle2 size={20} />
+                ) : (
+                  <span style={{ fontSize: '14px', fontWeight: '600' }}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className={`timeline-content ${roadmap.status === 'pendente' && index === roadmaps.findIndex(r => r.status === 'pendente') ? 'active' : ''}`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <p className="timeline-phase">FASE {String(index + 1).padStart(2, '0')}</p>
+                    <h3 className="timeline-title">{roadmap.titulo}</h3>
                     {roadmap.descricao && (
-                      <p className="text-sm text-text-secondary mt-1">{roadmap.descricao}</p>
+                      <p className="timeline-description">{roadmap.descricao}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="timeline-meta">
                       {roadmap.data_prazo && (
-                        <span className="text-sm text-text-secondary flex items-center gap-1">
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Calendar size={14} />
-                          {format(new Date(roadmap.data_prazo), 'dd/MM/yyyy')}
+                          Prazo: {format(new Date(roadmap.data_prazo), 'dd/MM/yyyy')}
                         </span>
                       )}
-                      {getDaysInfo(roadmap.data_prazo, roadmap.status)}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <MessageSquare size={14} />
+                        0 comentários
+                      </span>
                     </div>
                   </div>
-
-                  {/* Ações */}
-                  <div className="flex items-center gap-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`badge ${
+                      roadmap.status === 'concluido' ? 'badge-success' :
+                      roadmap.status === 'vencido' ? 'badge-danger' : 'badge-warning'
+                    }`}>
+                      {roadmap.status === 'concluido' ? 'CONCLUÍDO' :
+                       roadmap.status === 'vencido' ? 'VENCIDO' : 'EM ANDAMENTO'}
+                    </span>
                     <button
                       onClick={() => openEditModal(roadmap)}
-                      className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-background transition-colors"
+                      style={{ padding: '8px', borderRadius: '4px', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}
                     >
-                      <Pencil size={18} />
+                      <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(roadmap.id)}
-                      className="p-2 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/5 transition-colors"
+                      style={{ padding: '8px', borderRadius: '4px', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Quick status toggle */}
+                {roadmap.status !== 'concluido' && (
+                  <button
+                    onClick={() => handleStatusChange(roadmap.id, 'concluido')}
+                    style={{
+                      marginTop: '16px',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: '1px solid #14b8a6',
+                      background: 'transparent',
+                      color: '#14b8a6',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <CheckCircle2 size={14} />
+                    Marcar como concluído
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Route size={48} className="mx-auto text-text-secondary/30 mb-4" />
-            <h3 className="text-lg font-semibold text-text-primary">
-              {filter !== 'todos' ? 'Nenhum checkpoint com esse status' : 'Nenhum checkpoint ainda'}
-            </h3>
-            <p className="text-text-secondary mt-1">
-              {filter !== 'todos'
-                ? 'Tente mudar o filtro'
-                : 'Crie seu primeiro checkpoint para começar'}
-            </p>
-            {filter === 'todos' && (
-              <Button onClick={() => setModalOpen(true)} className="mt-4">
-                <Plus size={18} className="mr-2" />
-                Criar Checkpoint
-              </Button>
-            )}
-          </CardContent>
-        </Card>
       )}
 
-      {/* Modal Novo/Editar Roadmap */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        title={editingRoadmap ? 'Editar Checkpoint' : 'Novo Checkpoint'}
-        size="lg"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Título"
-            placeholder="Ex: Implementar autenticação"
-            value={formData.titulo}
-            onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-            required
-          />
+      {/* Modal */}
+      {modalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px', margin: '16px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="card-title">{editingRoadmap ? 'Editar Checkpoint' : 'Novo Checkpoint'}</h2>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={20} color="#64748b" />
+              </button>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Título</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ex: Implementar autenticação"
+                    value={formData.titulo}
+                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">
-              Projeto
-            </label>
-            <select
-              value={formData.projeto_id}
-              onChange={(e) => setFormData({ ...formData, projeto_id: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-lg border border-border bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            >
-              <option value="">Selecione um projeto</option>
-              {projetos.map((p) => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
+                <div className="form-group">
+                  <label className="form-label">Projeto</label>
+                  <select
+                    className="form-input"
+                    value={formData.projeto_id}
+                    onChange={(e) => setFormData({ ...formData, projeto_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione um projeto</option>
+                    {projetos.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Prazo (opcional)</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={formData.data_prazo}
+                    onChange={(e) => setFormData({ ...formData, data_prazo: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Descrição (opcional)</label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="Descreva o que precisa ser feito..."
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    style={{ resize: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={closeModal} style={{ flex: 1 }}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={submitting} style={{ flex: 1 }}>
+                    {submitting ? 'Salvando...' : (editingRoadmap ? 'Salvar' : 'Criar')}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-
-          <Input
-            label="Prazo (opcional)"
-            type="date"
-            value={formData.data_prazo}
-            onChange={(e) => setFormData({ ...formData, data_prazo: e.target.value })}
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">
-              Descrição (opcional)
-            </label>
-            <textarea
-              className="w-full px-4 py-2.5 rounded-lg border border-border bg-surface text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-              rows={3}
-              placeholder="Descreva o que precisa ser feito..."
-              value={formData.descricao}
-              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={closeModal} fullWidth>
-              Cancelar
-            </Button>
-            <Button type="submit" isLoading={submitting} fullWidth>
-              {editingRoadmap ? 'Salvar' : 'Criar'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+        </div>
+      )}
+    </Layout>
   )
 }
