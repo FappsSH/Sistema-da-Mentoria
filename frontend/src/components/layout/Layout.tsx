@@ -1,22 +1,36 @@
 import { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
-import { NotificationBell } from '../shared/NotificationBell'
-import { UserAvatar } from '../shared/UserAvatar'
+import { Bell } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 interface LayoutProps {
   children: ReactNode
+  title?: string
+  subtitle?: string
+  headerRight?: ReactNode
 }
 
-export function Layout({ children }: LayoutProps) {
-  const { user, loading } = useAuth()
+export function Layout({ children, title, subtitle, headerRight }: LayoutProps) {
+  const { user, profile, loading } = useAuth()
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f8fafc' }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: '#1a1a4e', borderTopColor: 'transparent' }} />
+          <div
+            className="w-12 h-12 border-4 rounded-full animate-spin"
+            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+          />
           <p style={{ color: '#64748b' }}>Carregando...</p>
         </div>
       </div>
@@ -28,29 +42,41 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
 
-      {/* Top header bar */}
-      <header
-        className="fixed top-0 right-0 h-16 flex items-center justify-end px-6 z-30"
-        style={{
-          left: '256px',
-          backgroundColor: '#f8fafc',
-          borderBottom: '1px solid #e2e8f0'
-        }}
-      >
-        <div className="flex items-center gap-4">
-          <NotificationBell />
-          <UserAvatar />
-        </div>
-      </header>
+      <div className="main-layout">
+        {/* Header */}
+        <header className="main-header">
+          <div className="header-left">
+            {title && (
+              <div>
+                {subtitle && <p className="breadcrumb">{subtitle}</p>}
+                <h1 className="header-title">{title}</h1>
+              </div>
+            )}
+          </div>
 
-      <main style={{ marginLeft: '256px', minHeight: '100vh', paddingTop: '64px' }}>
-        <div className="p-6">
+          <div className="header-right">
+            {headerRight}
+
+            {/* Notifications */}
+            <div className="notification-bell">
+              <Bell size={20} color="#64748b" />
+            </div>
+
+            {/* User Avatar */}
+            <div className="avatar avatar-md avatar-placeholder">
+              {profile?.nome_completo ? getInitials(profile.nome_completo) : 'U'}
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="main-content">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

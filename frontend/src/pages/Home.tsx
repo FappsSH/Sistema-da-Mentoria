@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Card, CardContent, Badge, Button } from '../components/ui'
+import { Layout } from '../components/layout/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../services/supabase'
 import { Roadmap, Reuniao } from '../types'
 import {
+  Users,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
+  BarChart3,
   Calendar,
-  ArrowRight,
-  Route,
-  TrendingUp,
+  Clock,
+  ChevronRight,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -21,7 +20,6 @@ export function Home() {
   const [metrics, setMetrics] = useState({
     pendentes: 0,
     concluidos: 0,
-    vencidos: 0,
   })
   const [proximaReuniao, setProximaReuniao] = useState<Reuniao | null>(null)
   const [ultimosRoadmaps, setUltimosRoadmaps] = useState<Roadmap[]>([])
@@ -31,7 +29,6 @@ export function Home() {
     async function fetchData() {
       if (!profile) return
 
-      // Buscar métricas dos roadmaps
       const { data: roadmaps } = await supabase
         .from('roadmaps')
         .select('*, projetos!inner(user_id)')
@@ -41,17 +38,13 @@ export function Home() {
         setMetrics({
           pendentes: roadmaps.filter(r => r.status === 'pendente').length,
           concluidos: roadmaps.filter(r => r.status === 'concluido').length,
-          vencidos: roadmaps.filter(r => r.status === 'vencido').length,
         })
         setUltimosRoadmaps(
           roadmaps
-            .filter(r => r.status === 'pendente')
-            .sort((a, b) => new Date(a.data_prazo || '').getTime() - new Date(b.data_prazo || '').getTime())
             .slice(0, 5)
         )
       }
 
-      // Buscar próxima reunião
       const { data: reunioes } = await supabase
         .from('reunioes')
         .select('*')
@@ -71,267 +64,262 @@ export function Home() {
     fetchData()
   }, [profile])
 
-  const horasPercentual = profile
-    ? Math.min((profile.horas_utilizadas / profile.horas_contratadas) * 100, 100)
-    : 0
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div
-          className="w-8 h-8 border-4 rounded-full animate-spin"
-          style={{ borderColor: '#1a1a4e', borderTopColor: 'transparent' }}
-        />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center" style={{ height: '400px' }}>
+          <div
+            className="w-10 h-10 border-4 rounded-full animate-spin"
+            style={{ borderColor: '#14b8a6', borderTopColor: 'transparent' }}
+          />
+        </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: '#1e293b' }}>
-          Olá, {profile?.nome_completo?.split(' ')[0] || 'Mentorado'}!
-        </h1>
-        <p className="mt-1" style={{ color: '#64748b' }}>
-          Acompanhe seu progresso e gerencie suas tarefas
-        </p>
-      </div>
+    <Layout>
+      <div style={{ display: 'flex', gap: '24px' }}>
+        {/* Main Content - Left */}
+        <div style={{ flex: 1 }}>
+          {/* Greeting */}
+          <div style={{ marginBottom: '24px' }}>
+            <p className="breadcrumb">PÁGINAS &gt; DASHBOARD</p>
+            <h1 className="header-title">Olá, {profile?.nome_completo?.split(' ')[0] || 'Mentorado'}!</h1>
+          </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Checkpoints Pendentes */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: '#64748b' }}>Pendentes</p>
-                <p className="text-3xl font-bold mt-1" style={{ color: '#1e293b' }}>{metrics.pendentes}</p>
+          {/* Metric Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            {/* Pendentes */}
+            <div className="metric-card">
+              <div className="metric-card-icon warning">
+                <Users size={24} />
               </div>
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
-              >
-                <Clock style={{ color: '#f59e0b' }} size={24} />
-              </div>
+              <p className="metric-card-label">Pendentes</p>
+              <p className="metric-card-value">{metrics.pendentes}</p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Checkpoints Concluídos */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: '#64748b' }}>Concluídos</p>
-                <p className="text-3xl font-bold mt-1" style={{ color: '#1e293b' }}>{metrics.concluidos}</p>
+            {/* Concluídos */}
+            <div className="metric-card">
+              <div className="metric-card-icon success">
+                <CheckCircle2 size={24} />
               </div>
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
-              >
-                <CheckCircle2 style={{ color: '#22c55e' }} size={24} />
-              </div>
+              <p className="metric-card-label">Concluídos</p>
+              <p className="metric-card-value">{metrics.concluidos}</p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Checkpoints Vencidos */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: '#64748b' }}>Vencidos</p>
-                <p className="text-3xl font-bold mt-1" style={{ color: '#1e293b' }}>{metrics.vencidos}</p>
+            {/* Horas Utilizadas */}
+            <div className="metric-card">
+              <div className="metric-card-icon info">
+                <BarChart3 size={24} />
               </div>
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-              >
-                <AlertTriangle style={{ color: '#ef4444' }} size={24} />
-              </div>
+              <p className="metric-card-label">Horas Utilizadas</p>
+              <p className="metric-card-value">{profile?.horas_utilizadas || 0}h / {profile?.horas_contratadas || 0}h</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Horas */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-sm" style={{ color: '#64748b' }}>Horas Utilizadas</p>
-                <p className="text-xl font-bold mt-1" style={{ color: '#1e293b' }}>
-                  {profile?.horas_utilizadas || 0}h / {profile?.horas_contratadas || 0}h
-                </p>
-              </div>
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
-              >
-                <TrendingUp style={{ color: '#6366f1' }} size={24} />
-              </div>
-            </div>
-            <div className="w-full rounded-full h-2 mt-3" style={{ backgroundColor: '#f1f5f9' }}>
-              <div
-                className="h-2 rounded-full transition-all duration-500"
-                style={{ width: `${horasPercentual}%`, backgroundColor: '#6366f1' }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Próxima Reunião */}
-        <Card style={{ minHeight: '220px' }}>
-          <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#1e293b' }}>
-                <Calendar size={20} style={{ color: '#1a1a4e' }} />
-                Próxima Reunião
-              </h2>
-              <Link to="/agenda">
-                <Button variant="ghost" size="sm">
-                  Ver agenda <ArrowRight size={16} className="ml-1" />
-                </Button>
+          {/* Seu Plano Atual */}
+          <div className="card" style={{ marginBottom: '24px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="card-title">Seu Plano Atual</h2>
+              <Link to="/configuracoes" className="table-link" style={{ fontSize: '14px' }}>
+                Fazer Upgrade
               </Link>
             </div>
+            <div className="card-body">
+              <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
+                    Pacote {profile?.pacote?.charAt(0).toUpperCase()}{profile?.pacote?.slice(1)}
+                  </h3>
+                  <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
+                    {profile?.horas_contratadas}h de mentoria contratadas. Você ainda tem o total de horas disponíveis para agendamento.
+                  </p>
+                  <div style={{ marginBottom: '8px' }}>
+                    <div className="progress-bar" style={{ height: '8px' }}>
+                      <div
+                        className="progress-bar-fill"
+                        style={{ width: `${((profile?.horas_utilizadas || 0) / (profile?.horas_contratadas || 1)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b' }}>
+                    <span>{profile?.horas_utilizadas || 0}H UTILIZADAS</span>
+                    <span>{profile?.horas_contratadas || 0}H TOTAL</span>
+                  </div>
+                </div>
+                <div style={{
+                  padding: '24px',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  minWidth: '140px'
+                }}>
+                  <CheckCircle2 size={32} color="#22c55e" style={{ marginBottom: '8px' }} />
+                  <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>Conta Ativa</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Atividades Recentes */}
+          <div className="card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="card-title">Atividades Recentes</h2>
+              <button className="btn btn-ghost btn-sm">•••</button>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>TAREFA</th>
+                    <th>DATA</th>
+                    <th>STATUS</th>
+                    <th>AÇÃO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ultimosRoadmaps.length > 0 ? (
+                    ultimosRoadmaps.map((roadmap) => (
+                      <tr key={roadmap.id}>
+                        <td>{roadmap.titulo}</td>
+                        <td>{roadmap.data_prazo ? format(new Date(roadmap.data_prazo), 'dd MMM yyyy', { locale: ptBR }) : '-'}</td>
+                        <td>
+                          <span className={`badge ${
+                            roadmap.status === 'concluido' ? 'badge-success' :
+                            roadmap.status === 'vencido' ? 'badge-danger' : 'badge-warning'
+                          }`}>
+                            {roadmap.status === 'concluido' ? 'Concluído' :
+                             roadmap.status === 'vencido' ? 'Vencido' : 'Pendente'}
+                          </span>
+                        </td>
+                        <td>
+                          <Link to="/roadmap" className="table-link">
+                            {roadmap.status === 'concluido' ? 'Ver detalhes' : 'Editar'}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', color: '#64748b' }}>
+                        Nenhuma atividade registrada
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar - Right */}
+        <div style={{ width: '320px', flexShrink: 0 }}>
+          {/* Próxima Reunião */}
+          <div className="highlight-card" style={{ marginBottom: '24px' }}>
+            <h3 className="highlight-card-title">
+              <Calendar size={20} />
+              Próxima Reunião
+            </h3>
 
             {proximaReuniao ? (
-              <div
-                className="rounded-xl p-4"
-                style={{ backgroundColor: 'rgba(26, 26, 78, 0.05)', border: '1px solid rgba(26, 26, 78, 0.1)' }}
-              >
-                <h3 className="font-semibold" style={{ color: '#1e293b' }}>{proximaReuniao.titulo}</h3>
-                <p className="text-sm mt-1" style={{ color: '#64748b' }}>
-                  {format(new Date(proximaReuniao.data_hora), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                </p>
-                <Badge variant="info" className="mt-3">
-                  {proximaReuniao.duracao_minutos} minutos
-                </Badge>
-              </div>
+              <>
+                <div className="highlight-card-content">
+                  <p className="highlight-card-event-title">{proximaReuniao.titulo}</p>
+                  <p className="highlight-card-event-info">
+                    <Calendar size={14} />
+                    {format(new Date(proximaReuniao.data_hora), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <p className="highlight-card-event-info">
+                    às {format(new Date(proximaReuniao.data_hora), 'HH:mm')}
+                  </p>
+                  <p className="highlight-card-event-info">
+                    <Clock size={14} />
+                    {proximaReuniao.duracao_minutos} minutos
+                  </p>
+                </div>
+              </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-6">
-                <Calendar size={48} className="mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
-                <p className="mb-4" style={{ color: '#64748b' }}>Nenhuma reunião agendada</p>
-                <Link to="/agenda">
-                  <Button variant="primary" size="sm">
-                    Agendar reunião
-                  </Button>
-                </Link>
+              <div className="highlight-card-content" style={{ textAlign: 'center' }}>
+                <Calendar size={32} style={{ opacity: 0.5, marginBottom: '8px' }} />
+                <p style={{ opacity: 0.9 }}>Nenhuma reunião agendada</p>
               </div>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Últimos Roadmaps Pendentes */}
-        <Card style={{ minHeight: '220px' }}>
-          <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#1e293b' }}>
-                <Route size={20} style={{ color: '#1a1a4e' }} />
-                Checkpoints Pendentes
-              </h2>
-              <Link to="/roadmap">
-                <Button variant="ghost" size="sm">
-                  Ver todos <ArrowRight size={16} className="ml-1" />
-                </Button>
-              </Link>
-            </div>
-
-            {ultimosRoadmaps.length > 0 ? (
-              <div className="space-y-3">
-                {ultimosRoadmaps.map((roadmap) => (
-                  <div
-                    key={roadmap.id}
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{ backgroundColor: '#f8fafc' }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate" style={{ color: '#1e293b' }}>{roadmap.titulo}</p>
-                      {roadmap.data_prazo && (
-                        <p className="text-sm" style={{ color: '#64748b' }}>
-                          Prazo: {format(new Date(roadmap.data_prazo), 'dd/MM/yyyy')}
-                        </p>
-                      )}
-                    </div>
-                    <Badge
-                      variant={
-                        roadmap.status === 'vencido'
-                          ? 'danger'
-                          : roadmap.status === 'concluido'
-                          ? 'success'
-                          : 'warning'
-                      }
-                    >
-                      {roadmap.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6">
-                <Route size={48} className="mb-3" style={{ color: 'rgba(100, 116, 139, 0.3)' }} />
-                <p className="mb-4" style={{ color: '#64748b' }}>Nenhum checkpoint pendente</p>
-                <Link to="/roadmap">
-                  <Button variant="primary" size="sm">
-                    Criar checkpoint
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pacote Info */}
-      <Card
-        className="text-white"
-        style={{
-          background: 'linear-gradient(135deg, #1a1a4e 0%, #2d2d7a 100%)',
-          border: 'none'
-        }}
-      >
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <span
-                className="inline-block px-3 py-1 rounded-full text-sm font-medium mb-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
-              >
-                Pacote {profile?.pacote?.charAt(0).toUpperCase()}{profile?.pacote?.slice(1)}
-              </span>
-              <h3 className="text-xl font-bold text-white">
-                {profile?.horas_contratadas}h de mentoria contratadas
-              </h3>
-              <p className="mt-1" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                Você ainda tem {(profile?.horas_contratadas || 0) - (profile?.horas_utilizadas || 0)}h disponíveis
-              </p>
-            </div>
             <Link to="/agenda">
-              <button
-                className="px-6 py-2 rounded-lg font-medium transition-all"
-                style={{
-                  backgroundColor: 'transparent',
-                  border: '2px solid white',
-                  color: 'white'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white'
-                  e.currentTarget.style.color = '#1a1a4e'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.color = 'white'
-                }}
-              >
-                Agendar reunião
-              </button>
+              <button className="highlight-card-btn">Agendar reunião</button>
             </Link>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          {/* Checkpoint Pendente */}
+          <div className="card" style={{ marginBottom: '24px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="card-title">Checkpoint Pendente</h3>
+              <span className="badge-urgent">URGENTE</span>
+            </div>
+            <div className="card-body">
+              {ultimosRoadmaps.filter(r => r.status === 'pendente').slice(0, 1).map((roadmap) => (
+                <div key={roadmap.id}>
+                  <p style={{ fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>
+                    {roadmap.titulo}
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
+                    Prazo: {roadmap.data_prazo ? format(new Date(roadmap.data_prazo), 'dd/MM/yyyy') : 'Não definido'}
+                  </p>
+                  <span className="badge badge-warning">pendente</span>
+                </div>
+              ))}
+              {ultimosRoadmaps.filter(r => r.status === 'pendente').length === 0 && (
+                <p style={{ color: '#64748b', textAlign: 'center' }}>Nenhum checkpoint pendente</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Ações Rápidas</h3>
+            </div>
+            <div className="card-body">
+              <Link to="/agenda" style={{ textDecoration: 'none' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '8px',
+                  backgroundColor: '#f8fafc',
+                  cursor: 'pointer'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Calendar size={20} color="#14b8a6" />
+                    <span style={{ fontSize: '14px', color: '#1e293b' }}>Ver Agenda</span>
+                  </div>
+                  <ChevronRight size={16} color="#64748b" />
+                </div>
+              </Link>
+              <Link to="/roadmap" style={{ textDecoration: 'none' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  backgroundColor: '#f8fafc',
+                  cursor: 'pointer'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <CheckCircle2 size={20} color="#14b8a6" />
+                    <span style={{ fontSize: '14px', color: '#1e293b' }}>Ver Roadmap</span>
+                  </div>
+                  <ChevronRight size={16} color="#64748b" />
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
   )
 }

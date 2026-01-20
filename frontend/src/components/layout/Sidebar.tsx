@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Calendar, FolderKanban, Route, Settings } from 'lucide-react'
+import { Home, Calendar, FolderKanban, Route, Settings, Grid3X3 } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -10,35 +11,54 @@ const menuItems = [
 ]
 
 export function Sidebar() {
+  const { profile } = useAuth()
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
-    <aside className="sidebar-container">
+    <aside className="sidebar">
       {/* Logo */}
-      <div className="sidebar-logo">
-        <img src="/logo-fapps.svg" alt="Fapps" style={{ height: '32px' }} />
+      <div className="sidebar-header">
+        <div className="sidebar-logo-icon">
+          <Grid3X3 size={20} color="#ffffff" />
+        </div>
+        <span className="sidebar-logo-text">fapps</span>
       </div>
 
-      <nav className="p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
-                }
-              >
-                <item.icon size={20} />
-                <span>{item.label}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      {/* Navigation */}
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
+            }
+          >
+            <item.icon size={20} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Footer info */}
+      {/* User Footer */}
       <div className="sidebar-footer">
-        <p>Sistema de Mentoria</p>
-        <p className="mt-1">v1.0.0 - MVP</p>
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar">
+            {profile?.nome_completo ? getInitials(profile.nome_completo) : 'U'}
+          </div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">Sistema de Mentoria</div>
+            <div className="sidebar-user-role">v1.0.0 - MVP</div>
+          </div>
+        </div>
       </div>
     </aside>
   )
